@@ -1,0 +1,80 @@
+title: Blank Grabber - Data Exfiltration & Persistence
+id: a3e9c5f1-2e1a-3c6-bd68-f4792c6f66a29
+description: |
+  Detects Blank Grabber malware creating RAR archives, exfiltrating data via Telegram, and disabling Windows Defender, as part of a software supply chain attack leveraging malicious PyPI packages.
+status: developed_for_personal_learning_purpose
+author: suktech24
+date: 2025-02-02
+tags:
+  - malware
+  - data exfiltration
+  - persistence
+  - infostealer
+  - Blank Grabber
+  - threat hunting
+
+references:
+  - "https://www.datadoghq.com/blog/supply-chain-attack-npm-pypi-mut-8694/"
+  - "https://securitylabs.datadoghq.com/articles/2024-q4-threat-roundup/"
+
+mitre:
+  tactic:
+    - TA0010, Exfiltration, https://attack.mitre.org/tactics/TA0010/
+    - TA0005, Defense Evasion, https://attack.mitre.org/tactics/TA0005/
+  technique:
+    - T1560.001, Archive Collected Data: Archive via Utility, https://attack.mitre.org/techniques/T1560/001/
+    - T1020 # Automated Exfiltration
+    - T1071.001 # Application Layer Protocol: Web Protocols (Telegram Bot)
+    - T1562.001 # Impair Defenses: Disable or Modify Tools
+
+logsource:
+  category: process_creation
+  product: windows
+  service: sysmon
+
+detection:
+  selection_rar_exfiltration:
+    Image|endswith:
+      - "rar.exe"
+    CommandLine|contains:
+      - "-hp" # Password-protected RAR archive creation
+
+  selection_telegram_exfiltration:
+    Image|endswith:
+      - "powershell.exe"
+    CommandLine|contains:
+      - "bot7546407054"
+      - "api.telegram.org/bot"
+
+  selection_defender_disable:
+    Image|endswith:
+      - "powershell.exe"
+    CommandLine|contains:
+      - "Set-MpPreference -DisableRealtimeMonitoring $true"
+      - "Set-MpPreference -DisableScriptScanning $true"
+      - "Set-MpPreference -SubmitSamplesConsent NeverSend"
+
+  selection_persistence:
+    Image|endswith:
+      - "powershell.exe"
+    CommandLine|contains:
+      - "Copy-Item -Path C:\\Users\\*\\AppData\\Local\\Temp\\CBLines.exe"
+      - "-Destination C:\\Users\\*\\AppData\\Local\\Temp\\"
+
+  condition: >
+    selection_rar_exfiltration or
+    selection_telegram_exfiltration or
+    selection_defender_disable or
+    selection_persistence
+
+level: critical
+
+falsepositives:
+  - Legitimate use of Telegram API for automation.
+  - Admins archiving files for backups.
+
+fields:
+  - Image
+  - CommandLine
+  - ParentImage
+  - User
