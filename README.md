@@ -3,9 +3,7 @@
 This repository contains detection rules inspired by articles I read. Every weekend, I explore cybersecurity articles and translate key insights into practical detection rules.
 
 ## Purpose
-- Enhance threat detection capabilities by implementing rules based on real-world security research.
-- Continuously improve my detection knowledge through regular learning
-- Repo structure is based on [Sigma rule](https://github.com/SigmaHQ/sigma/tree/master/rules-emerging-threats)
+- I have developed this repo to continuously improve my detection knowledge through regular learning from real world threats
 
 # Contribution
 
